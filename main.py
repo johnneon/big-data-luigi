@@ -61,7 +61,7 @@ class ProcessTables(luigi.Task):
         return ExtractArchive(self.dataset_name, self.output_dir)
 
     def output(self):
-        return luigi.LocalTarget(os.path.join(self.output_dir, self.dataset_name, "processed"))
+        return luigi.LocalTarget(os.path.join(self.output_dir, self.dataset_name))
 
     def run(self):
         processed_dir = self.output().path
@@ -103,6 +103,19 @@ class ProcessTables(luigi.Task):
                     reduced_df.to_csv(reduced_file, sep='\t', index=False)
 
                 os.remove(input_path)
+
+
+class CleanupTask(luigi.Task):
+    dataset_name = luigi.Parameter()
+    output_dir = luigi.Parameter(default="data")
+
+    def requires(self):
+        return ProcessTables(self.dataset_name, self.output_dir)
+
+    def run(self):
+        extracted_dir = os.path.join(self.output_dir, self.dataset_name, "extracted")
+        if os.path.exists(extracted_dir):
+            shutil.rmtree(extracted_dir)
 
 
 if __name__ == "__main__":
